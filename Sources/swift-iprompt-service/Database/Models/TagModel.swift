@@ -1,33 +1,43 @@
 //
-//  LocalTabTable.swift
+//  TagModel.swift
 //  swift-iprompt-service
 //
-//  Created by david on 2026/1/21.
+//  Created by qinwenzhou on 2026/1/18.
 //
 
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct LocalTabTable: DBTable {
+internal struct TagModel: DBModel {
     static var tableName: String {
-        return "local_tag"
+        return "tag"
     }
     
     var identifier: UInt64? = nil
+    var userId: Int
+    var id: Int
     var name: String
     var color: String
     var priority: Int
     
     enum CodingKeys: String, CodingTableKey {
-        typealias Root = LocalTabTable
+        typealias Root = TagModel
         
         static let objectRelationalMapping = TableBinding(CodingKeys.self) {
             BindColumnConstraint(identifier, isPrimary: true, isAutoIncrement: true)
         }
         
         case identifier
+        case userId = "user_id"
+        case id
         case name
         case color
         case priority
+    }
+}
+
+extension TagModel {
+    static func getAllObjects() throws -> [Self] {
+        return try database.getObjects(fromTable: Self.tableName)
     }
 }

@@ -1,5 +1,5 @@
 //
-//  UserTable.swift
+//  UserModel.swift
 //  swift-iprompt-service
 //
 //  Created by qinwenzhou on 2026/1/18.
@@ -8,7 +8,7 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct UserTable: DBTable {
+internal struct UserModel: DBModel {
     static var tableName: String {
         return "user"
     }
@@ -26,7 +26,7 @@ internal struct UserTable: DBTable {
     var isSuperuser: Bool
     
     enum CodingKeys: String, CodingTableKey {
-        typealias Root = UserTable
+        typealias Root = UserModel
         
         static let objectRelationalMapping = TableBinding(CodingKeys.self) {
             BindColumnConstraint(identifier, isPrimary: true, isAutoIncrement: true)
@@ -43,5 +43,11 @@ internal struct UserTable: DBTable {
         case memberLevel = "member_level"
         case avatarUrl = "avatar_url"
         case isSuperuser = "is_superuser"
+    }
+}
+
+extension UserModel {
+    static func getAllObjects() throws -> [Self] {
+        return try database.getObjects(fromTable: Self.tableName)
     }
 }

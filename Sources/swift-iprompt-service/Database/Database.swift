@@ -48,10 +48,10 @@ fileprivate final class DBManager: @unchecked Sendable {
     }
     
     private func createTables() throws {
-        try db.create(table: LocalPromptTable.tableName, of: LocalPromptTable.self)
-        try db.create(table: PromptTable.tableName, of: PromptTable.self)
-        try db.create(table: LocalTabTable.tableName, of: LocalTabTable.self)
-        try db.create(table: TagTable.tableName, of: TagTable.self)
-        try db.create(table: UserTable.tableName, of: UserTable.self)
+        try db.create(table: LocalPromptModel.tableName, of: LocalPromptModel.self)
+        try db.create(table: PromptModel.tableName, of: PromptModel.self)
+        try db.create(table: LocalTagModel.tableName, of: LocalTagModel.self)
+        try db.create(table: TagModel.tableName, of: TagModel.self)
+        try db.create(table: UserModel.tableName, of: UserModel.self)
     }
 }

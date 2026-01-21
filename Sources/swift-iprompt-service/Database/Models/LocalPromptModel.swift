@@ -1,21 +1,19 @@
 //
-//  PromptTable.swift
+//  LocalPromptModel .swift
 //  swift-iprompt-service
 //
-//  Created by qinwenzhou on 2026/1/18.
+//  Created by david on 2026/1/21.
 //
 
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct PromptTable: DBTable {
+internal struct LocalPromptModel : DBModel {
     static var tableName: String {
-        return "prompt"
+        return "local_prompt"
     }
     
     var identifier: UInt64? = nil
-    var userId: Int
-    var id: Int
     var name: String
     var content: String
     var description: String?
@@ -27,15 +25,13 @@ internal struct PromptTable: DBTable {
     var updateAt: Date
     
     enum CodingKeys: String, CodingTableKey {
-        typealias Root = PromptTable
+        typealias Root = LocalPromptModel
         
         static let objectRelationalMapping = TableBinding(CodingKeys.self) {
             BindColumnConstraint(identifier, isPrimary: true, isAutoIncrement: true)
         }
         
         case identifier
-        case userId = "user_id"
-        case id
         case name
         case content
         case description
@@ -45,5 +41,11 @@ internal struct PromptTable: DBTable {
         case isLocked = "is_locked"
         case createAt = "create_at"
         case updateAt = "update_at"
+    }
+}
+
+extension LocalPromptModel {
+    static func getAllObjects() throws -> [Self] {
+        return try database.getObjects(fromTable: Self.tableName)
     }
 }
