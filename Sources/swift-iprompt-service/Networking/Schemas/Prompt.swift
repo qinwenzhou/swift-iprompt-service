@@ -5,6 +5,8 @@
 //  Created by qinwenzhou on 2026/1/19.
 //
 
+import Foundation
+
 public struct PromptCreate: Codable, Sendable {
     public var name: String
     public var content: String
@@ -24,4 +26,6 @@ public struct PromptRead: Identifiable, Codable, Sendable {
     public var tags: [TagRead]?
     public var attachments: [Attachment]?
     public var isLocked: Bool
+    public var createAt: Date
+    public var updateAt: Date
 }

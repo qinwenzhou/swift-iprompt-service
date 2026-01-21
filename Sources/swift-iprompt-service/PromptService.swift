@@ -8,6 +8,10 @@
 import Foundation
 
 open class PromptService {
+    open func readCachedPromptList() async throws -> [PromptRead] {
+        return []
+    }
+    
     open func createPrompt(with promptCreate: PromptCreate) async throws -> PromptRead {
         return try await API.createPrompt(with: promptCreate)
     }

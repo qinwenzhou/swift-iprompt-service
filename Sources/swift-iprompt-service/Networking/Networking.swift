@@ -87,10 +87,11 @@ public final class Networking: @unchecked Sendable {
     // MARK: - Private
     
     private let userQueue = DispatchQueue(
-        label: "prompt.service.user.queue"
+        label: "iprompt.service.user.queue"
     )
     
     private var _user: UserAuthed?
+    
     private var user: UserAuthed? {
         set {
             userQueue.sync {

@@ -1,5 +1,5 @@
 //
-//  TagModel.swift
+//  TagTable.swift
 //  swift-iprompt-service
 //
 //  Created by qinwenzhou on 2026/1/18.
@@ -8,30 +8,30 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-struct TagModel: TableCodable {
+internal struct TagTable: DBTable {
     static var tableName: String {
         return "tag"
     }
     
-    var id: Int
+    var identifier: UInt64? = nil
     var userId: Int
-    var tagId: Int
+    var id: Int
     var name: String
     var color: String
     var priority: Int
     
     enum CodingKeys: String, CodingTableKey {
-        typealias Root = TagModel
+        typealias Root = TagTable
         
-        case id
+        static let objectRelationalMapping = TableBinding(CodingKeys.self) {
+            BindColumnConstraint(identifier, isPrimary: true, isAutoIncrement: true)
+        }
+        
+        case identifier
         case userId = "user_id"
-        case tagId = "tag_id"
+        case id
         case name
         case color
         case priority
-        
-        static let objectRelationalMapping = TableBinding(CodingKeys.self) {
-            BindColumnConstraint(id, isPrimary: true, isAutoIncrement: true)
-        }
     }
 }

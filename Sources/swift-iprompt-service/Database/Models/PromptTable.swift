@@ -1,5 +1,5 @@
 //
-//  PromptModel.swift
+//  PromptTable.swift
 //  swift-iprompt-service
 //
 //  Created by qinwenzhou on 2026/1/18.
@@ -8,28 +8,34 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-struct PromptModel: TableCodable {
+internal struct PromptTable: DBTable {
     static var tableName: String {
         return "prompt"
     }
     
-    var id: Int
+    var identifier: UInt64? = nil
     var userId: Int
-    var promptId: Int
+    var id: Int
     var name: String
     var content: String
     var description: String?
     var type: Int
-    var tags: String?
-    var attachments: String?
+    var tags: [Int]?
+    var attachments: [AttachCell]?
     var isLocked: Bool
+    var createAt: Date
+    var updateAt: Date
     
     enum CodingKeys: String, CodingTableKey {
-        typealias Root = PromptModel
+        typealias Root = PromptTable
         
-        case id
+        static let objectRelationalMapping = TableBinding(CodingKeys.self) {
+            BindColumnConstraint(identifier, isPrimary: true, isAutoIncrement: true)
+        }
+        
+        case identifier
         case userId = "user_id"
-        case promptId = "prompt_id"
+        case id
         case name
         case content
         case description
@@ -37,9 +43,7 @@ struct PromptModel: TableCodable {
         case tags
         case attachments
         case isLocked = "is_locked"
-        
-        static let objectRelationalMapping = TableBinding(CodingKeys.self) {
-            BindColumnConstraint(id, isPrimary: true, isAutoIncrement: true)
-        }
+        case createAt = "create_at"
+        case updateAt = "update_at"
     }
 }
