@@ -12,20 +12,20 @@ public struct PromptCreate: Codable, Sendable {
     public var content: String
     public var description: String?
     public var type: Int
-    public var tags: [TagRead]?
-    public var attachments: [Attachment]?
+    public var tags: [Int64]?
+    public var attachments: [Attach]?
     public var isLocked: Bool
 }
 
-public struct PromptRead: Identifiable, Codable, Sendable {
-    public var id: Int
+public struct PromptRead: Codable, Sendable {
+    public var id: Int64
     public var name: String
     public var content: String
     public var description: String?
     public var type: Int
-    public var tags: [TagRead]?
-    public var attachments: [Attachment]?
+    public var tags: [Int64]?
+    public var attachments: [Attach]?
     public var isLocked: Bool
-    public var createAt: Date
-    public var updateAt: Date
+    public var createTime: Date
+    public var updateTime: Date
 }

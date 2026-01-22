@@ -8,34 +8,34 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct PromptModel: DBModel {
+internal struct PromptModel: DBTable, Sendable {
     static var tableName: String {
         return "prompt"
     }
     
-    var identifier: UInt64? = nil
-    var userId: Int
-    var id: Int
+    var id: Int64? = nil
+    var userId: Int64
+    var promptId: Int64
     var name: String
     var content: String
     var description: String?
     var type: Int
-    var tags: [Int]?
-    var attachments: [AttachCell]?
+    var tags: [Int64]?
+    var attachments: [DBAttach]?
     var isLocked: Bool
-    var createAt: Date
-    var updateAt: Date
+    var createTime: Date
+    var updateTime: Date
     
     enum CodingKeys: String, CodingTableKey {
         typealias Root = PromptModel
         
         static let objectRelationalMapping = TableBinding(CodingKeys.self) {
-            BindColumnConstraint(identifier, isPrimary: true, isAutoIncrement: true)
+            BindColumnConstraint(id, isPrimary: true, isAutoIncrement: true)
         }
         
-        case identifier
-        case userId = "user_id"
         case id
+        case userId = "user_id"
+        case promptId = "prompt_id"
         case name
         case content
         case description
@@ -43,16 +43,18 @@ internal struct PromptModel: DBModel {
         case tags
         case attachments
         case isLocked = "is_locked"
-        case createAt = "create_at"
-        case updateAt = "update_at"
+        case createTime = "create_time"
+        case updateTime = "update_time"
     }
 }
 
 extension PromptModel {
-    static func getAllObjects(for userId: Int) throws -> [Self] {
-        return try database.getObjects(
-            fromTable: Self.tableName,
-            where: Self.Properties.userId == userId
+    static func getLastLocalPromptId() async throws -> Int64 {
+        let record = try await Self.getObject(
+            where: Self.Properties.userId == 0,
+            orderBy: [Self.Properties.promptId.abs().order(.descending)]
         )
+        guard let record else { return 0}
+        return record.id ?? 0
     }
 }

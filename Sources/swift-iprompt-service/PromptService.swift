@@ -10,16 +10,14 @@ import Foundation
 
 open class PromptService {
     open func readCachedPromptList() async throws -> [PromptRead] {
-        var promptList = try LocalPromptModel.getAllObjects().map {
+        let user = try? Networking.getCurrentUser()
+        let userId = user?.id ?? 0
+        return try PromptModel.getObjects(
+            where: PromptModel.Properties.userId == userId,
+            orderBy: [PromptModel.Properties.updateTime.order(.descending)]
+        ).map {
             $0.asPromptRead
         }
-        if let user = try? Networking.getCurrentUser() {
-            let userPrompts = try PromptModel.getAllObjects(for: user.id).map {
-                $0.asPromptRead
-            }
-            promptList = promptList + userPrompts
-        }
-        return promptList
     }
     
     open func createPrompt(with promptCreate: PromptCreate) async throws -> PromptRead {
@@ -39,16 +37,12 @@ open class PromptService {
     }
 }
 
-extension LocalPromptModel {
-    fileprivate var asPromptRead: PromptRead {
-        PromptRead(
-            id: 0,
+extension DBAttach {
+    fileprivate var asAttach: Attach {
+        Attach(
             name: self.name,
-            content: self.content,
-            type: self.type,
-            isLocked: self.isLocked,
-            createAt: self.createAt,
-            updateAt: self.updateAt
+            url: self.url,
+            type: self.type
         )
     }
 }
@@ -56,13 +50,17 @@ extension LocalPromptModel {
 extension PromptModel {
     fileprivate var asPromptRead: PromptRead {
         PromptRead(
-            id: 0,
+            id: self.promptId,
             name: self.name,
             content: self.content,
             type: self.type,
+            tags: self.tags,
+            attachments: self.attachments?.compactMap {
+                $0.asAttach
+            },
             isLocked: self.isLocked,
-            createAt: self.createAt,
-            updateAt: self.updateAt
+            createTime: self.createTime,
+            updateTime: self.updateTime
         )
     }
 }

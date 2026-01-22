@@ -8,13 +8,13 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct UserModel: DBModel {
+internal struct UserModel: DBTable, Sendable {
     static var tableName: String {
         return "user"
     }
     
-    var identifier: UInt64? = nil
-    var userId: Int
+    var id: Int64? = nil
+    var userId: Int64
     var username: String
     var gender: Int?
     var birthDate: Date?
@@ -24,15 +24,17 @@ internal struct UserModel: DBModel {
     var memberLevel: Int
     var avatarUrl: String?
     var isSuperuser: Bool
+    var createTime: Date
+    var updateTime: Date
     
     enum CodingKeys: String, CodingTableKey {
         typealias Root = UserModel
         
         static let objectRelationalMapping = TableBinding(CodingKeys.self) {
-            BindColumnConstraint(identifier, isPrimary: true, isAutoIncrement: true)
+            BindColumnConstraint(id, isPrimary: true, isAutoIncrement: true)
         }
         
-        case identifier
+        case id
         case userId = "user_id"
         case username
         case gender
@@ -43,11 +45,7 @@ internal struct UserModel: DBModel {
         case memberLevel = "member_level"
         case avatarUrl = "avatar_url"
         case isSuperuser = "is_superuser"
-    }
-}
-
-extension UserModel {
-    static func getAllObjects() throws -> [Self] {
-        return try database.getObjects(fromTable: Self.tableName)
+        case createTime = "create_time"
+        case updateTime = "update_time"
     }
 }
