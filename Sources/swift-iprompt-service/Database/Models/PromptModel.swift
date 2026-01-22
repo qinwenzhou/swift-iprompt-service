@@ -8,7 +8,7 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct PromptModel: DBTable, Sendable {
+internal struct PromptModel: DBTable {
     static var tableName: String {
         return "prompt"
     }
@@ -31,6 +31,7 @@ internal struct PromptModel: DBTable, Sendable {
         
         static let objectRelationalMapping = TableBinding(CodingKeys.self) {
             BindColumnConstraint(id, isPrimary: true, isAutoIncrement: true)
+            BindColumnConstraint(promptId, isUnique: true)
         }
         
         case id
@@ -56,5 +57,21 @@ extension PromptModel {
         )
         guard let record else { return 0}
         return record.id ?? 0
+    }
+    
+    static func getAllPrompts(for userId: Int64) async throws -> [Self] {
+        try await Self.getObjects(
+            where: Self.Properties.userId == userId,
+            orderBy: [Self.Properties.updateTime.order(.descending)]
+        )
+    }
+    
+    static func getPrompt(with promptId: Int64) async throws -> Self {
+        guard let record = try await Self.getObject(
+            where: Self.Properties.promptId == promptId
+        ) else {
+            throw DBError(message: "Record is not found!")
+        }
+        return record
     }
 }

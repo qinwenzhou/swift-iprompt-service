@@ -8,7 +8,7 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct UserModel: DBTable, Sendable {
+internal struct UserModel: DBTable {
     static var tableName: String {
         return "user"
     }
@@ -32,6 +32,7 @@ internal struct UserModel: DBTable, Sendable {
         
         static let objectRelationalMapping = TableBinding(CodingKeys.self) {
             BindColumnConstraint(id, isPrimary: true, isAutoIncrement: true)
+            BindColumnConstraint(userId, isUnique: true)
         }
         
         case id

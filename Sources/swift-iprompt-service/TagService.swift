@@ -9,64 +9,79 @@ import Foundation
 @preconcurrency import WCDBSwift
 
 open class TagService {
+    open func createTag(with tagCreate: TagCreate) async throws -> TagRead {
+        let user = try? Networking.getCurrentUser()
+        let userId = user?.id ?? 0
+        guard userId > 0 else {
+            let lastId = try await TagTable.getLastLocalTagId()
+            let tagId = (lastId + 1) * (-1) // Use negative numbers to indicate local id.
+            let tagModel = tagCreate.asLocalTagModel(with: tagId)
+            try await TagTable.insertOrReplace(objects: [tagModel])
+            return tagModel.asTagRead
+        }
+        let tagRead = try await API.createTag(with: tagCreate)
+        let tagModel = tagRead.asTagModel(for: userId)
+        try await TagTable.insertOrReplace(objects: [tagModel])
+        return tagRead
+    }
+    
     open func readCachedTagList() async throws -> [TagRead] {
         let user = try? Networking.getCurrentUser()
         let userId = user?.id ?? 0
-        
-        return try await TagTable.getObjects(
-            where: TagModel.Properties.userId == userId,
-            orderBy: [TagModel.Properties.updateTime.order(.descending)]
-        ).map {
+        return try await TagTable.getAllTags(for: userId).map {
             $0.asTagRead
         }
     }
     
-    open func createTag(with tagCreate: TagCreate) async throws -> TagRead {
+    open func readTagList() async throws -> [TagRead] {
+        let user = try Networking.getCurrentUser()
+        let tagList = try await API.readTagList()
+        try await TagTable.insertOrReplace(objects: tagList.map {
+            $0.asTagModel(for: user.id)
+        })
+        return tagList
+    }
+    
+    open func readTagInfo(with tagId: Int64) async throws -> TagRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.id ?? 0
-
         guard userId > 0 else {
-            let lastId = try await TagTable.getLastLocalTagId()
-            let tagId = (lastId + 1) * -1 // Use negative numbers to indicate local id.
-            let tagRead = tagCreate.asTagRead(with: tagId)
-            let tagModel = tagRead.asTagModel(for: userId)
-            try await TagTable.insert(objects: [tagModel])
-            return tagRead
+            let tagModel = try await TagTable.getTag(with: tagId)
+            return tagModel.asTagRead
         }
-        
-        let tagRead = try await API.createTag(with: tagCreate)
-        let tagModel = tagRead.asTagModel(for: userId)
-        if let _ = try await TagTable.getObject(
-            where: TagModel.Properties.userId == userId && TagModel.Properties.tagId == tagRead.id
-        ) {
-            
-        } else {
-            try await TagTable.insert(objects: [tagModel])
-        }
+        let tagRead = try await API.readTagInfo(with: tagId)
+        try await TagTable.insertOrReplace(objects: [
+            tagRead.asTagModel(for: userId)
+        ])
         return tagRead
     }
     
-    open func readTagList() async throws -> [TagRead] {
-        return try await API.readTagList()
+    open func deleteTag(with tagId: Int64) async throws {
+        let user = try? Networking.getCurrentUser()
+        let userId = user?.id ?? 0
+        if userId > 0 {
+            try await API.deleteTag(with: tagId)
+        }
+        try await TagTable.deleteTag(with: tagId)
     }
     
-    open func readTagInfo(with tagId: Int) async throws -> TagRead {
-        return try await API.readTagInfo(with: tagId)
-    }
-    
-    open func deleteTag(with tagId: Int) async throws {
-        return try await API.deleteTag(with: tagId)
-    }
-    
-    open func deleteTags(with tagIds: [Int]) async throws {
-        return try await API.deleteTags(with: tagIds)
+    open func deleteTags(with tagIds: [Int64]) async throws {
+        let user = try? Networking.getCurrentUser()
+        let userId = user?.id ?? 0
+        if userId > 0 {
+            try await API.deleteTags(with: tagIds)
+        }
+        for tagId in tagIds {
+            try await TagTable.deleteTag(with: tagId)
+        }
     }
 }
 
 extension TagCreate {
-    fileprivate func asTagRead(with id: Int64) -> TagRead {
-        TagRead(
-            id: id,
+    fileprivate func asLocalTagModel(with tagId: Int64) -> TagModel {
+        TagModel(
+            userId: 0,
+            tagId: tagId,
             name: self.name,
             color: self.color,
             priority: self.priority,

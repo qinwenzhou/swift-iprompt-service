@@ -8,7 +8,7 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal protocol DBTable: TableCodable {
+internal protocol DBTable: TableCodable, Sendable {
     static var tableName: String {get}
     
     static func getObjects(
@@ -24,9 +24,20 @@ internal protocol DBTable: TableCodable {
         where condition: Condition?,
         orderBy orderList: [OrderBy]?
     ) async throws -> Self?
+    
+    static func insertOrReplace(
+        objects: [Self]
+    ) async throws
+    
+    static func delete(
+        where condition: Condition?,
+        orderBy orderList: [OrderBy]?,
+        limit: Limit?,
+        offset: Offset?
+    ) async throws
 }
 
-extension DBTable where Self: Sendable {
+extension DBTable {
     static func getObjects(
         on propertyConvertibleList: PropertyConvertible...,
         where condition: Condition? = nil,
@@ -83,12 +94,40 @@ extension DBTable where Self: Sendable {
         }
     }
     
-    static func insert(objects: [Self]) async throws {
+    static func insertOrReplace(objects: [Self]) async throws {
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try database.run(transaction: { db in
                     do {
-                        try db.insert(objects, intoTable: Self.tableName)
+                        try db.insertOrReplace(objects, intoTable: Self.tableName)
+                        continuation.resume(returning: ())
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                })
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
+    }
+    
+    static func delete(
+        where condition: Condition? = nil,
+        orderBy orderList: [OrderBy]? = nil,
+        limit: Limit? = nil,
+        offset: Offset? = nil
+    ) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try database.run(transaction: { db in
+                    do {
+                        try db.delete(
+                            fromTable: Self.tableName,
+                            where: condition,
+                            orderBy: orderList,
+                            limit: limit,
+                            offset: offset
+                        )
                         continuation.resume(returning: ())
                     } catch {
                         continuation.resume(throwing: error)

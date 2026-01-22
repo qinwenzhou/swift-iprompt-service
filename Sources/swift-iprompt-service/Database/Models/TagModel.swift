@@ -8,7 +8,7 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct TagModel: DBTable, Sendable {
+internal struct TagModel: DBTable {
     static var tableName: String {
         return "tag"
     }
@@ -27,6 +27,7 @@ internal struct TagModel: DBTable, Sendable {
         
         static let objectRelationalMapping = TableBinding(CodingKeys.self) {
             BindColumnConstraint(id, isPrimary: true, isAutoIncrement: true)
+            BindColumnConstraint(tagId, isUnique: true)
         }
         
         case id
@@ -42,11 +43,32 @@ internal struct TagModel: DBTable, Sendable {
 
 extension TagModel {
     static func getLastLocalTagId() async throws -> Int64 {
-        let record = try await Self.getObject(
+        guard let record = try await Self.getObject(
             where: Self.Properties.userId == 0,
             orderBy: [Self.Properties.tagId.abs().order(.descending)]
-        )
-        guard let record else { return 0}
+        ) else {
+            return 0
+        }
         return record.id ?? 0
+    }
+    
+    static func getAllTags(for userId: Int64) async throws -> [Self] {
+        try await Self.getObjects(
+            where: Self.Properties.userId == userId,
+            orderBy: [Self.Properties.updateTime.order(.descending)]
+        )
+    }
+    
+    static func getTag(with tagId: Int64) async throws -> Self {
+        guard let record = try await Self.getObject(
+            where: Self.Properties.tagId == tagId
+        ) else {
+            throw DBError(message: "Record is not found!")
+        }
+        return record
+    }
+    
+    static func deleteTag(with tagId: Int64) async throws {
+        try await Self.delete(where: Self.Properties.tagId == tagId)
     }
 }
