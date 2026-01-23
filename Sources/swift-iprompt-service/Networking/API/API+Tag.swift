@@ -57,7 +57,7 @@ extension API {
         }
     }
     
-    public static func readTagInfo(with tagId: Int) async throws -> TagRead {
+    public static func readTagInfo(with tagId: Int64) async throws -> TagRead {
         let url = try Networking.getBaseURL()
             .appending(path: "/api/v1")
             .appending(path: Self.tagInfo.rawValue)
@@ -81,7 +81,7 @@ extension API {
         }
     }
     
-    public static func deleteTag(with tagId: Int) async throws {
+    public static func deleteTag(with tagId: Int64) async throws {
         let url = try Networking.getBaseURL()
             .appending(path: "/api/v1")
             .appending(path: Self.tagDelete.rawValue)
@@ -104,7 +104,7 @@ extension API {
         }
     }
     
-    public static func deleteTags(with tagIds: [Int]) async throws {
+    public static func deleteTags(with tagIds: [Int64]) async throws {
         let url = try Networking.getBaseURL()
             .appending(path: "/api/v1")
             .appending(path: Self.tagDeleteList.rawValue)

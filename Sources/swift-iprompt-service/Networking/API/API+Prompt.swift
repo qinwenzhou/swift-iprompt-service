@@ -57,7 +57,7 @@ extension API {
         }
     }
     
-    public static func readPromptInfo(with promptId: Int) async throws -> PromptRead {
+    public static func readPromptInfo(with promptId: Int64) async throws -> PromptRead {
         let url = try Networking.getBaseURL()
             .appending(path: "/api/v1")
             .appending(path: Self.promptInfo.rawValue)
@@ -81,7 +81,7 @@ extension API {
         }
     }
     
-    public static func deletePrompt(with promptId: Int) async throws {
+    public static func deletePrompt(with promptId: Int64) async throws {
         let url = try Networking.getBaseURL()
             .appending(path: "/api/v1")
             .appending(path: Self.promptDelete.rawValue)

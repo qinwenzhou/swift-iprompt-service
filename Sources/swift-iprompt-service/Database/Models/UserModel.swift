@@ -8,13 +8,13 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct UserModel: TableCodable {
+internal struct UserModel: TableCodable, Sendable {
     static var tableName: String {
         return "user"
     }
     
-    var id: Int
-    var userId: Int
+    var id: Int64? = nil
+    var userId: Int64
     var username: String
     var gender: Int?
     var birthDate: Date?
@@ -24,9 +24,16 @@ internal struct UserModel: TableCodable {
     var memberLevel: Int
     var avatarUrl: String?
     var isSuperuser: Bool
+    var createTime: Date
+    var updateTime: Date
     
     enum CodingKeys: String, CodingTableKey {
         typealias Root = UserModel
+        
+        static let objectRelationalMapping = TableBinding(CodingKeys.self) {
+            BindColumnConstraint(id, isPrimary: true, isAutoIncrement: true)
+            BindColumnConstraint(userId, isUnique: true)
+        }
         
         case id
         case userId = "user_id"
@@ -39,9 +46,23 @@ internal struct UserModel: TableCodable {
         case memberLevel = "member_level"
         case avatarUrl = "avatar_url"
         case isSuperuser = "is_superuser"
-        
-        static let objectRelationalMapping = TableBinding(CodingKeys.self) {
-            BindColumnConstraint(id, isPrimary: true, isAutoIncrement: true)
+        case createTime = "create_time"
+        case updateTime = "update_time"
+    }
+}
+
+extension UserModel {
+    static func insertOrReplace(user: Self) async throws {
+        try await database.async.insertOrReplace([user], intoTable: Self.tableName)
+    }
+    
+    static func getUser(with id: Int64) async throws -> Self {
+        guard let record: Self = try await database.async.getObject(
+            fromTable: Self.tableName,
+            where: Self.Properties.userId == id
+        ) else {
+            throw DBError(message: "Record is not found!")
         }
+        return record
     }
 }

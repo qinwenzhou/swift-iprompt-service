@@ -29,15 +29,15 @@ public final class Networking: @unchecked Sendable {
         case production
     }
     
-    /// Environment
-    public static var environment: Networking.Environment {
-        return Networking.shared.env
-    }
-    
     /// Configuration
     /// - Parameter environment: ``Networking.Environment``
     public static func configure(environment: Networking.Environment) {
         Networking.shared.env = environment
+    }
+    
+    /// Get environment
+    public static var environment: Networking.Environment {
+        return Networking.shared.env
     }
     
     /// Get base URL
@@ -87,10 +87,11 @@ public final class Networking: @unchecked Sendable {
     // MARK: - Private
     
     private let userQueue = DispatchQueue(
-        label: "prompt.service.user.queue"
+        label: "iprompt.service.user.queue"
     )
     
     private var _user: UserAuthed?
+    
     private var user: UserAuthed? {
         set {
             userQueue.sync {
