@@ -50,3 +50,19 @@ internal struct UserModel: TableCodable, Sendable {
         case updateTime = "update_time"
     }
 }
+
+extension UserModel {
+    static func insertOrReplace(user: Self) async throws {
+        try await database.async.insertOrReplace([user], intoTable: Self.tableName)
+    }
+    
+    static func getUser(with id: Int64) async throws -> Self {
+        guard let record: Self = try await database.async.getObject(
+            fromTable: Self.tableName,
+            where: Self.Properties.userId == id
+        ) else {
+            throw DBError(message: "Record is not found!")
+        }
+        return record
+    }
+}

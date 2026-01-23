@@ -11,23 +11,23 @@ import Foundation
 open class TagService {
     open func createTag(with tagCreate: TagCreate) async throws -> TagRead {
         let user = try? Networking.getCurrentUser()
-        let userId = user?.id ?? 0
+        let userId = user?.account.id ?? 0
         guard userId > 0 else {
             let lastId = try await TagTable.getLastLocalTagId()
             let tagId = (lastId + 1) * (-1) // Use negative numbers to indicate local id.
             let tagModel = tagCreate.asLocalTagModel(with: tagId)
-            try await TagTable.insertOrReplace(objects: [tagModel])
+            try await TagTable.insertOrReplace(tag: tagModel)
             return tagModel.asTagRead
         }
         let tagRead = try await API.createTag(with: tagCreate)
         let tagModel = tagRead.asTagModel(for: userId)
-        try await TagTable.insertOrReplace(objects: [tagModel])
+        try await TagTable.insertOrReplace(tag: tagModel)
         return tagRead
     }
     
     open func readCachedTagList() async throws -> [TagRead] {
         let user = try? Networking.getCurrentUser()
-        let userId = user?.id ?? 0
+        let userId = user?.account.id ?? 0
         return try await TagTable.getAllTags(for: userId).map {
             $0.asTagRead
         }
@@ -36,29 +36,29 @@ open class TagService {
     open func readTagList() async throws -> [TagRead] {
         let user = try Networking.getCurrentUser()
         let tagList = try await API.readTagList()
-        try await TagTable.insertOrReplace(objects: tagList.map {
-            $0.asTagModel(for: user.id)
+        try await TagTable.insertOrReplace(tags: tagList.map {
+            $0.asTagModel(for: user.account.id)
         })
         return tagList
     }
     
     open func readTagInfo(with tagId: Int64) async throws -> TagRead {
         let user = try? Networking.getCurrentUser()
-        let userId = user?.id ?? 0
+        let userId = user?.account.id ?? 0
         guard userId > 0 else {
             let tagModel = try await TagTable.getTag(with: tagId)
             return tagModel.asTagRead
         }
         let tagRead = try await API.readTagInfo(with: tagId)
-        try await TagTable.insertOrReplace(objects: [
-            tagRead.asTagModel(for: userId)
-        ])
+        try await TagTable.insertOrReplace(
+            tag: tagRead.asTagModel(for: userId)
+        )
         return tagRead
     }
     
     open func deleteTag(with tagId: Int64) async throws {
         let user = try? Networking.getCurrentUser()
-        let userId = user?.id ?? 0
+        let userId = user?.account.id ?? 0
         if userId > 0 {
             try await API.deleteTag(with: tagId)
         }
@@ -67,7 +67,7 @@ open class TagService {
     
     open func deleteTags(with tagIds: [Int64]) async throws {
         let user = try? Networking.getCurrentUser()
-        let userId = user?.id ?? 0
+        let userId = user?.account.id ?? 0
         if userId > 0 {
             try await API.deleteTags(with: tagIds)
         }
@@ -78,7 +78,7 @@ open class TagService {
 }
 
 extension TagCreate {
-    fileprivate func asLocalTagModel(with tagId: Int64) -> TagModel {
+    func asLocalTagModel(with tagId: Int64) -> TagModel {
         TagModel(
             userId: 0,
             tagId: tagId,
@@ -92,7 +92,7 @@ extension TagCreate {
 }
 
 extension TagRead {
-    fileprivate func asTagModel(for userId: Int64) -> TagModel {
+    func asTagModel(for userId: Int64) -> TagModel {
         TagModel(
             userId: userId,
             tagId: self.id,
@@ -106,7 +106,7 @@ extension TagRead {
 }
 
 extension TagModel {
-    fileprivate var asTagRead: TagRead {
+    var asTagRead: TagRead {
         TagRead(
             id: self.tagId,
             name: self.name,

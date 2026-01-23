@@ -27,8 +27,6 @@ public struct UserRead: Codable, Sendable {
 }
 
 public struct UserAuthed: Codable, Sendable {
-    public var id: Int64
-    public var username: String
-    public var email: String?
+    public var account: UserRead
     public var token: Token
 }

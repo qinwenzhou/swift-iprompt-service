@@ -42,25 +42,36 @@ internal struct TagModel: TableCodable, Sendable {
 }
 
 extension TagModel {
+    static func insertOrReplace(tag: Self) async throws {
+        try await Self.insertOrReplace(tags: [tag])
+    }
+    
+    static func insertOrReplace(tags: [Self]) async throws {
+        try await database.async.insertOrReplace(tags, intoTable: Self.tableName)
+    }
+    
     static func getLastLocalTagId() async throws -> Int64 {
-        guard let record = try await Self.getObject(
+        guard let record: Self = try await database.async.getObject(
+            fromTable: Self.tableName,
             where: Self.Properties.userId == 0,
             orderBy: [Self.Properties.tagId.abs().order(.descending)]
-        ) else {
-            return 0
-        }
+        ) else { return 0 }
         return record.id ?? 0
     }
     
     static func getAllTags(for userId: Int64) async throws -> [Self] {
-        try await Self.getObjects(
+        return try await database.async.getObjects(
+            fromTable: Self.tableName,
             where: Self.Properties.userId == userId,
-            orderBy: [Self.Properties.updateTime.order(.descending)]
+            orderBy: [
+                Self.Properties.updateTime.order(.descending)
+            ]
         )
     }
     
     static func getTag(with tagId: Int64) async throws -> Self {
-        guard let record = try await Self.getObject(
+        guard let record: Self = try await database.async.getObject(
+            fromTable: Self.tableName,
             where: Self.Properties.tagId == tagId
         ) else {
             throw DBError(message: "Record is not found!")
@@ -68,7 +79,10 @@ extension TagModel {
         return record
     }
     
-    static func deleteTag(with tagId: Int64) async throws {
-        try await Self.delete(where: Self.Properties.tagId == tagId)
+    static func deleteTag(with id: Int64) async throws {
+        try await database.async.delete(
+            fromTable: Self.tableName,
+            where: Self.Properties.tagId == id
+        )
     }
 }

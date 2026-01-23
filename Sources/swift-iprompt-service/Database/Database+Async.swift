@@ -8,31 +8,11 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal protocol SyncCompatible {
-    
-}
+extension Database: DBAsyncCompatible {}
 
-internal extension SyncCompatible {
-    var sync: SyncWrapper<Self> {
-        return SyncWrapper(self)
-    }
-}
-
-extension Database: SyncCompatible {
-    
-}
-
-internal struct SyncWrapper<Base> {
-    let base: Base
-    
-    init(_ base: Base) {
-        self.base = base
-    }
-}
-
-extension SyncWrapper where Base: Database {
+extension DBAsyncWrapper where Base: Database {
     func getObjects<Object: TableDecodable & Sendable>(
-        on propertyConvertibleList: [PropertyConvertible],
+        on propertyConvertibleList: PropertyConvertible...,
         fromTable table: String,
         where condition: Condition? = nil,
         orderBy orderList: [OrderBy]? = nil,
@@ -63,7 +43,7 @@ extension SyncWrapper where Base: Database {
     }
     
     func getObject<Object: TableDecodable & Sendable>(
-        on propertyConvertibleList: [PropertyConvertible],
+        on propertyConvertibleList: PropertyConvertible...,
         fromTable table: String,
         where condition: Condition? = nil,
         orderBy orderList: [OrderBy]? = nil,
@@ -118,14 +98,14 @@ extension SyncWrapper where Base: Database {
     
     func delete(
         fromTable table: String,
-        where condition: Condition?,
-        orderBy orderList: [OrderBy]?,
-        limit: Limit?,
-        offset: Offset?
+        where condition: Condition? = nil,
+        orderBy orderList: [OrderBy]? = nil,
+        limit: Limit? = nil,
+        offset: Offset? = nil
     ) async throws {
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try database.run(transaction: { db in
+                try self.base.run(transaction: { db in
                     do {
                         try db.delete(
                             fromTable: table,

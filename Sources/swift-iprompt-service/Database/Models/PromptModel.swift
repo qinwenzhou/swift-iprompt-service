@@ -50,28 +50,47 @@ internal struct PromptModel: TableCodable, Sendable {
 }
 
 extension PromptModel {
+    static func insertOrReplace(prompt: Self) async throws {
+        try await Self.insertOrReplace(prompts: [prompt])
+    }
+    
+    static func insertOrReplace(prompts: [Self]) async throws {
+        try await database.async.insertOrReplace(prompts, intoTable: Self.tableName)
+    }
+    
     static func getLastLocalPromptId() async throws -> Int64 {
-        let record = try await Self.getObject(
+        guard let record: Self = try await database.async.getObject(
+            fromTable: Self.tableName,
             where: Self.Properties.userId == 0,
             orderBy: [Self.Properties.promptId.abs().order(.descending)]
-        )
-        guard let record else { return 0}
+        ) else { return 0 }
         return record.id ?? 0
     }
     
     static func getAllPrompts(for userId: Int64) async throws -> [Self] {
-        try await Self.getObjects(
+        return try await database.async.getObjects(
+            fromTable: Self.tableName,
             where: Self.Properties.userId == userId,
-            orderBy: [Self.Properties.updateTime.order(.descending)]
+            orderBy: [
+                Self.Properties.updateTime.order(.descending)
+            ]
         )
     }
     
     static func getPrompt(with promptId: Int64) async throws -> Self {
-        guard let record = try await Self.getObject(
+        guard let record: Self = try await database.async.getObject(
+            fromTable: Self.tableName,
             where: Self.Properties.promptId == promptId
         ) else {
             throw DBError(message: "Record is not found!")
         }
         return record
+    }
+    
+    static func deletePrompt(with id: Int64) async throws {
+        try await database.async.delete(
+            fromTable: Self.tableName,
+            where: Self.Properties.promptId == id
+        )
     }
 }
