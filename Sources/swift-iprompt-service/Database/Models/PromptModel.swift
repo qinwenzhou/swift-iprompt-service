@@ -8,7 +8,7 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct PromptModel: DBTable {
+internal struct PromptModel: TableCodable, Sendable {
     static var tableName: String {
         return "prompt"
     }

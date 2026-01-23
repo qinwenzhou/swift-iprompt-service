@@ -8,7 +8,7 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct TagModel: DBTable {
+internal struct TagModel: TableCodable, Sendable {
     static var tableName: String {
         return "tag"
     }

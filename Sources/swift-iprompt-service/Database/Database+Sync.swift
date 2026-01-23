@@ -1,63 +1,57 @@
 //
-//  DBTable.swift
+//  Database+Sync.swift
 //  swift-iprompt-service
 //
-//  Created by david on 2026/1/21.
+//  Created by david on 2026/1/23.
 //
 
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal protocol DBTable: TableCodable, Sendable {
-    static var tableName: String {get}
+internal protocol SyncCompatible {
     
-    static func getObjects(
-        on propertyConvertibleList: PropertyConvertible...,
-        where condition: Condition?,
-        orderBy orderList: [OrderBy]?,
-        limit: Limit?,
-        offset: Offset?
-    ) async throws -> [Self]
-    
-    static func getObject(
-        on propertyConvertibleList: PropertyConvertible...,
-        where condition: Condition?,
-        orderBy orderList: [OrderBy]?
-    ) async throws -> Self?
-    
-    static func insertOrReplace(
-        objects: [Self]
-    ) async throws
-    
-    static func delete(
-        where condition: Condition?,
-        orderBy orderList: [OrderBy]?,
-        limit: Limit?,
-        offset: Offset?
-    ) async throws
 }
 
-extension DBTable {
-    static func getObjects(
-        on propertyConvertibleList: PropertyConvertible...,
+internal extension SyncCompatible {
+    var sync: SyncWrapper<Self> {
+        return SyncWrapper(self)
+    }
+}
+
+extension Database: SyncCompatible {
+    
+}
+
+internal struct SyncWrapper<Base> {
+    let base: Base
+    
+    init(_ base: Base) {
+        self.base = base
+    }
+}
+
+extension SyncWrapper where Base: Database {
+    func getObjects<Object: TableDecodable & Sendable>(
+        on propertyConvertibleList: [PropertyConvertible],
+        fromTable table: String,
         where condition: Condition? = nil,
         orderBy orderList: [OrderBy]? = nil,
         limit: Limit? = nil,
         offset: Offset? = nil
-    ) async throws -> [Self] {
+    ) async throws -> [Object] {
         return try await withCheckedThrowingContinuation { continuation in
             do {
-                try database.run(transaction: { db in
+                try self.base.run(transaction: { db in
                     do {
-                        let list: [Self] = try db.getObjects(
+                        let objects: [Object] = try db.getObjects(
                             on: propertyConvertibleList,
-                            fromTable: Self.tableName,
+                            fromTable: table,
                             where: condition,
                             orderBy: orderList,
                             limit: limit,
                             offset: offset
                         )
-                        continuation.resume(returning: list)
+                        continuation.resume(returning: objects)
                     } catch {
                         continuation.resume(throwing: error)
                     }
@@ -68,22 +62,25 @@ extension DBTable {
         }
     }
     
-    static func getObject(
-        on propertyConvertibleList: PropertyConvertible...,
+    func getObject<Object: TableDecodable & Sendable>(
+        on propertyConvertibleList: [PropertyConvertible],
+        fromTable table: String,
         where condition: Condition? = nil,
-        orderBy orderList: [OrderBy]? = nil
-    ) async throws -> Self? {
+        orderBy orderList: [OrderBy]? = nil,
+        offset: Offset? = nil
+    ) async throws -> Object? {
         return try await withCheckedThrowingContinuation { continuation in
             do {
-                try database.run(transaction: { db in
+                try self.base.run(transaction: { db in
                     do {
-                        let record: Self? = try db.getObject(
+                        let object: Object? = try db.getObject(
                             on: propertyConvertibleList,
-                            fromTable: Self.tableName,
+                            fromTable: table,
                             where: condition,
-                            orderBy: orderList
+                            orderBy: orderList,
+                            offset: offset
                         )
-                        continuation.resume(returning: record)
+                        continuation.resume(returning: object)
                     } catch {
                         continuation.resume(throwing: error)
                     }
@@ -94,12 +91,20 @@ extension DBTable {
         }
     }
     
-    static func insertOrReplace(objects: [Self]) async throws {
+    func insertOrReplace<Object: TableEncodable>(
+        _ objects: [Object],
+        on propertyConvertibleList: [PropertyConvertible]? = nil,
+        intoTable table: String
+    ) async throws {
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try database.run(transaction: { db in
+                try self.base.run(transaction: { db in
                     do {
-                        try db.insertOrReplace(objects, intoTable: Self.tableName)
+                        try db.insertOrReplace(
+                            objects,
+                            on: propertyConvertibleList,
+                            intoTable: table
+                        )
                         continuation.resume(returning: ())
                     } catch {
                         continuation.resume(throwing: error)
@@ -111,18 +116,19 @@ extension DBTable {
         }
     }
     
-    static func delete(
-        where condition: Condition? = nil,
-        orderBy orderList: [OrderBy]? = nil,
-        limit: Limit? = nil,
-        offset: Offset? = nil
+    func delete(
+        fromTable table: String,
+        where condition: Condition?,
+        orderBy orderList: [OrderBy]?,
+        limit: Limit?,
+        offset: Offset?
     ) async throws {
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try database.run(transaction: { db in
                     do {
                         try db.delete(
-                            fromTable: Self.tableName,
+                            fromTable: table,
                             where: condition,
                             orderBy: orderList,
                             limit: limit,

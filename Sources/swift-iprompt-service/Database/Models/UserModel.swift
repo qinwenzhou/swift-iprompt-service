@@ -8,7 +8,7 @@
 import Foundation
 @preconcurrency import WCDBSwift
 
-internal struct UserModel: DBTable {
+internal struct UserModel: TableCodable, Sendable {
     static var tableName: String {
         return "user"
     }
