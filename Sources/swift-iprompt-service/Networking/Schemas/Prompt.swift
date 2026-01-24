@@ -13,7 +13,7 @@ public struct PromptCreate: Codable, Sendable {
     public var description: String?
     public var type: Int
     public var tags: [Int64]?
-    public var attachments: [Attach]?
+    public var attachs: [Attach]?
     public var isLocked: Bool
 }
 
@@ -24,7 +24,7 @@ public struct PromptRead: Codable, Sendable {
     public var description: String?
     public var type: Int
     public var tags: [Int64]?
-    public var attachments: [Attach]?
+    public var attachs: [Attach]?
     public var isLocked: Bool
     public var createTime: Date
     public var updateTime: Date

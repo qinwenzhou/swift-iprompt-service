@@ -10,19 +10,14 @@ import Alamofire
 
 extension API {
     public static func register(
-        with userCreate: UserCreate
+        user: UserCreate
     ) async throws -> UserAuthed {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.userRegister.rawValue)
-        
-        let request = AS.request(
-            url,
+        let response = await AS.request(
+            Self.userRegister.url(v: 1),
             method: .post,
-            parameters: userCreate,
+            parameters: user,
             encoder: JSONParameterEncoder.snakeCase
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             UserAuthed.self,
             decoder: JSONDecoder.snakeCase
         ).response
@@ -35,20 +30,15 @@ extension API {
         }
     }
     
-    internal static func login(
-        with userLogin: UserLogin
+    public static func login(
+        email user: UserLogin
     ) async throws -> UserAuthed {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.userToken.rawValue)
-        
-        let request = AS.request(
-            url,
+        let response = await AS.request(
+            Self.userLoginEmail.url(v: 1),
             method: .post,
-            parameters: userLogin,
+            parameters: user,
             encoder: JSONParameterEncoder.snakeCase
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             UserAuthed.self,
             decoder: JSONDecoder.snakeCase
         ).response
@@ -61,18 +51,15 @@ extension API {
         }
     }
     
-    internal static func refresh(token: String) async throws -> Token {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.userTokenRefresh.rawValue)
-        
-        let request = AS.request(
-            url,
+    internal static func refresh(
+        token: String
+    ) async throws -> Token {
+        let response = await AS.request(
+            Self.userTokenRefresh.url(v: 1),
             method: .post,
             parameters: ["token": token],
             encoder: JSONParameterEncoder.default
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             Token.self,
             decoder: JSONDecoder.snakeCase
         ).response
@@ -86,15 +73,10 @@ extension API {
     }
     
     internal static func readMe() async throws -> UserRead {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.userMe.rawValue)
-        
-        let request = AS.request(
-            url,
+        let response = await AS.request(
+            Self.userMe.url(v: 1),
             method: .get,
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             UserRead.self,
             decoder: JSONDecoder.snakeCase
         ).response

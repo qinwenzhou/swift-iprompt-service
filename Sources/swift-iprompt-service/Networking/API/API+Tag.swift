@@ -9,20 +9,15 @@ import Foundation
 import Alamofire
 
 extension API {
-    public static func createTag(
-        with tagCreate: TagCreate
+    public static func create(
+        tag: TagCreate
     ) async throws -> TagRead {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.tagCreate.rawValue)
-        
-        let request = AS.request(
-            url,
+        let response = await AS.request(
+            Self.tagCreate.url(v: 1),
             method: .post,
-            parameters: tagCreate,
+            parameters: tag,
             encoder: JSONParameterEncoder.snakeCase
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             TagRead.self,
             decoder: JSONDecoder.snakeCase
         ).response
@@ -35,16 +30,13 @@ extension API {
         }
     }
     
-    public static func readTagList() async throws -> [TagRead] {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.tagList.rawValue)
+    public static func readTagList(
         
-        let request = AS.request(
-            url,
+    ) async throws -> [TagRead] {
+        let response = await AS.request(
+            Self.tagList.url(v: 1),
             method: .get,
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             [TagRead].self,
             decoder: JSONDecoder.snakeCase
         ).response
@@ -57,18 +49,15 @@ extension API {
         }
     }
     
-    public static func readTagInfo(with tagId: Int64) async throws -> TagRead {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.tagInfo.rawValue)
-        
-        let request = AS.request(
-            url,
+    public static func readTagInfo(
+        with tagId: Int64
+    ) async throws -> TagRead {
+        let response = await AS.request(
+            Self.tagInfo.url(v: 1),
             method: .get,
             parameters: ["tag_id": tagId],
             encoder: JSONParameterEncoder.default
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             TagRead.self,
             decoder: JSONDecoder.snakeCase
         ).response
@@ -81,18 +70,15 @@ extension API {
         }
     }
     
-    public static func deleteTag(with tagId: Int64) async throws {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.tagDelete.rawValue)
-        
-        let request = AS.request(
-            url,
+    public static func deleteTag(
+        with tagId: Int64
+    ) async throws {
+        let response = await AS.request(
+            Self.tagDelete.url(v: 1),
             method: .delete,
             parameters: ["tag_id": tagId],
             encoder: JSONParameterEncoder.default
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             Empty.self
         ).response
         
@@ -104,18 +90,15 @@ extension API {
         }
     }
     
-    public static func deleteTags(with tagIds: [Int64]) async throws {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.tagDeleteList.rawValue)
-        
-        let request = AS.request(
-            url,
+    public static func deleteTags(
+        with tagIds: [Int64]
+    ) async throws {
+        let response = await AS.request(
+            Self.tagDeleteList.url(v: 1),
             method: .delete,
             parameters: ["tag_ids": tagIds],
             encoder: JSONParameterEncoder.default
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             Empty.self
         ).response
         

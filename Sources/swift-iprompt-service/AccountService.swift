@@ -8,15 +8,15 @@
 import Foundation
 
 open class AccountService {
-    open func register(with userCreate: UserCreate) async throws -> UserAuthed {
-        let user = try await API.register(with: userCreate)
+    open func register(user: UserCreate) async throws -> UserAuthed {
+        let user = try await API.register(user: user)
         try await UserTable.insertOrReplace(user: user.asUserModel)
         try Networking.store(user: user)
         return user
     }
     
-    open func login(with userLogin: UserLogin) async throws -> UserAuthed {
-        let user = try await API.login(with: userLogin)
+    open func login(email user: UserLogin) async throws -> UserAuthed {
+        let user = try await API.login(email: user)
         try await UserTable.insertOrReplace(user: user.asUserModel)
         try Networking.store(user: user)
         return user

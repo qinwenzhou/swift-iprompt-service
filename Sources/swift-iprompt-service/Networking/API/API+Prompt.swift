@@ -9,20 +9,15 @@ import Foundation
 import Alamofire
 
 extension API {
-    public static func createPrompt(
-        with promptCreate: PromptCreate
+    public static func create(
+        prompt: PromptCreate
     ) async throws -> PromptRead {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.promptCreate.rawValue)
-        
-        let request = AS.request(
-            url,
+        let response = await AS.request(
+            Self.promptCreate.url(v: 1),
             method: .post,
-            parameters: promptCreate,
+            parameters: prompt,
             encoder: JSONParameterEncoder.snakeCase
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             PromptRead.self,
             decoder: JSONDecoder.snakeCase
         ).response
@@ -35,16 +30,13 @@ extension API {
         }
     }
     
-    public static func readPromptList() async throws -> [PromptRead] {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.promptList.rawValue)
+    public static func readPromptList(
         
-        let request = AS.request(
-            url,
+    ) async throws -> [PromptRead] {
+        let response = await AS.request(
+            Self.promptList.url(v: 1),
             method: .get,
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             [PromptRead].self,
             decoder: JSONDecoder.snakeCase
         ).response
@@ -57,18 +49,15 @@ extension API {
         }
     }
     
-    public static func readPromptInfo(with promptId: Int64) async throws -> PromptRead {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.promptInfo.rawValue)
-        
-        let request = AS.request(
-            url,
+    public static func readPromptInfo(
+        with promptId: Int64
+    ) async throws -> PromptRead {
+        let response = await AS.request(
+            Self.promptInfo.url(v: 1),
             method: .get,
             parameters: ["prompt_id": promptId],
             encoder: JSONParameterEncoder.default
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             PromptRead.self,
             decoder: JSONDecoder.snakeCase
         ).response
@@ -81,18 +70,15 @@ extension API {
         }
     }
     
-    public static func deletePrompt(with promptId: Int64) async throws {
-        let url = try Networking.getBaseURL()
-            .appending(path: "/api/v1")
-            .appending(path: Self.promptDelete.rawValue)
-        
-        let request = AS.request(
-            url,
+    public static func deletePrompt(
+        with promptId: Int64
+    ) async throws {
+        let response = await AS.request(
+            Self.promptDelete.url(v: 1),
             method: .delete,
             parameters: ["prompt_id": promptId],
             encoder: JSONParameterEncoder.default
-        )
-        let response = await request.serializingDecodable(
+        ).serializingDecodable(
             Empty.self
         ).response
         
