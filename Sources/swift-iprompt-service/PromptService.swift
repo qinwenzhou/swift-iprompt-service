@@ -99,7 +99,6 @@ extension PromptCreate {
             attachs: self.attachs?.compactMap {
                 $0.asDBAttach
             },
-            isLocked: self.isLocked,
             createTime: Date.now,
             updateTime: Date.now
         )
@@ -119,7 +118,6 @@ extension PromptRead {
             attachs: self.attachs?.compactMap {
                 $0.asDBAttach
             },
-            isLocked: self.isLocked,
             createTime: self.createTime,
             updateTime: self.updateTime
         )
@@ -137,7 +135,6 @@ extension PromptModel {
             attachs: self.attachs?.compactMap {
                 $0.asAttach
             },
-            isLocked: self.isLocked,
             createTime: self.createTime,
             updateTime: self.updateTime
         )
