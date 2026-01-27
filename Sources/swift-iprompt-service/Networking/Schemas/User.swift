@@ -14,7 +14,7 @@ public struct UserCreate: Codable, Sendable {
 }
 
 public struct UserLogin: Codable, Sendable {
-    public var email: String
+    public var username: String
     public var password: String
 }
 

@@ -9,17 +9,17 @@ import Foundation
 @preconcurrency import WCDBSwift
 
 open class TagService {
-    open func createTag(with tagCreate: TagCreate) async throws -> TagRead {
+    open func create(tag: TagCreate) async throws -> TagRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
         guard userId > 0 else {
             let lastId = try await TagTable.getLastLocalTagId()
             let tagId = (lastId + 1) * (-1) // Use negative numbers to indicate local id.
-            let tagModel = tagCreate.asLocalTagModel(with: tagId)
+            let tagModel = tag.asLocalTagModel(with: tagId)
             try await TagTable.insertOrReplace(tag: tagModel)
             return tagModel.asTagRead
         }
-        let tagRead = try await API.createTag(with: tagCreate)
+        let tagRead = try await API.create(tag: tag)
         let tagModel = tagRead.asTagModel(for: userId)
         try await TagTable.insertOrReplace(tag: tagModel)
         return tagRead

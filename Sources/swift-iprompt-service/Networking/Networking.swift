@@ -41,10 +41,10 @@ public final class Networking: @unchecked Sendable {
     }
     
     /// Get base URL
-    public static func getBaseURL() throws -> URL {
+    public static func getBaseURL() -> URL {
         let host = Networking.shared.host
         guard let url = URL(string: host) else {
-            throw NetworkingError(message: "The URL: \(host) is invalid.")
+            fatalError("The URL: \(host) is invalid.")
         }
         return url
     }
@@ -152,11 +152,7 @@ private final class RequestInterceptor: Alamofire.RequestInterceptor {
             return
         }
         
-        guard let host = try? Networking.getBaseURL().path() else {
-            completion(.success(urlRequest))
-            return
-        }
-        
+        let host = Networking.getBaseURL().path()
         guard url.absoluteString.hasPrefix(host) else {
             completion(.success(urlRequest))
             return

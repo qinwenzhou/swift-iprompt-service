@@ -21,8 +21,7 @@ internal struct PromptModel: TableCodable, Sendable {
     var description: String?
     var type: Int
     var tags: [Int64]?
-    var attachments: [DBAttach]?
-    var isLocked: Bool
+    var attachs: [DBAttach]?
     var createTime: Date
     var updateTime: Date
     
@@ -42,8 +41,7 @@ internal struct PromptModel: TableCodable, Sendable {
         case description
         case type
         case tags
-        case attachments
-        case isLocked = "is_locked"
+        case attachs
         case createTime = "create_time"
         case updateTime = "update_time"
     }

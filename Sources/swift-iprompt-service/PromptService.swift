@@ -9,17 +9,17 @@ import Foundation
 @preconcurrency import WCDBSwift
 
 open class PromptService {
-    open func createPrompt(with promptCreate: PromptCreate) async throws -> PromptRead {
+    open func create(prompt: PromptCreate) async throws -> PromptRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
         guard userId > 0 else {
             let lastId = try await PromptTable.getLastLocalPromptId()
             let promptId = (lastId + 1) * (-1) // Use negative numbers to indicate local id.
-            let promptModel = promptCreate.asLocalPromptModel(with: promptId)
+            let promptModel = prompt.asLocalPromptModel(with: promptId)
             try await PromptTable.insertOrReplace(prompt: promptModel)
             return promptModel.asPromptRead
         }
-        let promptRead = try await API.createPrompt(with: promptCreate)
+        let promptRead = try await API.create(prompt: prompt)
         let promptModel = promptRead.asPromptModel(for: userId)
         try await PromptTable.insertOrReplace(prompt: promptModel)
         return promptRead
@@ -96,10 +96,9 @@ extension PromptCreate {
             description: self.description,
             type: self.type,
             tags: self.tags,
-            attachments: self.attachments?.compactMap {
+            attachs: self.attachs?.compactMap {
                 $0.asDBAttach
             },
-            isLocked: self.isLocked,
             createTime: Date.now,
             updateTime: Date.now
         )
@@ -116,10 +115,9 @@ extension PromptRead {
             description: self.description,
             type: self.type,
             tags: self.tags,
-            attachments: self.attachments?.compactMap {
+            attachs: self.attachs?.compactMap {
                 $0.asDBAttach
             },
-            isLocked: self.isLocked,
             createTime: self.createTime,
             updateTime: self.updateTime
         )
@@ -134,10 +132,9 @@ extension PromptModel {
             content: self.content,
             type: self.type,
             tags: self.tags,
-            attachments: self.attachments?.compactMap {
+            attachs: self.attachs?.compactMap {
                 $0.asAttach
             },
-            isLocked: self.isLocked,
             createTime: self.createTime,
             updateTime: self.updateTime
         )
