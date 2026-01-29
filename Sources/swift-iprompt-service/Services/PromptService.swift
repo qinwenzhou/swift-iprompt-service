@@ -10,7 +10,11 @@ import Combine
 @preconcurrency import WCDBSwift
 
 open class PromptService: ServiceType {
-    public var promptListSubject = PassthroughSubject<[PromptRead], Never>()
+    public var promptListSubject = CurrentValueSubject<[PromptRead], Never>([])
+    
+    public required init() {
+        
+    }
     
     open func start() {
         

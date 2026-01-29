@@ -10,7 +10,11 @@ import Combine
 @preconcurrency import WCDBSwift
 
 open class TagService: ServiceType {
-    public var tagListSubject = PassthroughSubject<[TagRead], Never>()
+    public var tagListSubject = CurrentValueSubject<[TagRead], Never>([])
+    
+    public required init() {
+        
+    }
     
     open func start() {
         

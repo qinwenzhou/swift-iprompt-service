@@ -14,29 +14,35 @@ open class ServiceManager: @unchecked Sendable {
     private var services = [String: ServiceType]()
     private var lock = NSLock()
     
-    open func install<ServiceSpec: ServiceSpecType>(_ serviceSpec: ServiceSpec) {
+    @discardableResult
+    open func install<Service: ServiceType>(_ serviceType: Service.Type) -> Service {
         lock.lock()
         defer { lock.unlock() }
         
-        let serviceId = serviceSpec.serviceIdentifier
-        guard services[serviceId] == nil else { return }
+        let key = String(describing: serviceType.self)
+        if let existingService = services[key] as? Service {
+            return existingService
+        }
         
-        let service = serviceSpec.makeService()
+        let service = Service()
         service.start()
         
-        services[serviceId] = service
+        services[key] = service
+        return service
     }
     
-    open func uninstall<ServiceSpec: ServiceSpecType>(_ serviceSpec: ServiceSpec) {
+    open func uninstall<Service: ServiceType>(_ serviceType: Service.Type) {
         lock.lock()
         defer { lock.unlock() }
         
-        let serviceId = serviceSpec.serviceIdentifier
-        guard let service = services[serviceId] else { return }
+        let key = String(describing: serviceType.self)
+        guard let service = services[key] else {
+            return
+        }
         
         service.stop()
         
-        services.removeValue(forKey: serviceId)
+        services.removeValue(forKey: key)
     }
     
     open func uninstallAllServices() {
@@ -49,11 +55,14 @@ open class ServiceManager: @unchecked Sendable {
         services.removeAll()
     }
     
-    open func getService<ServiceSpec: ServiceSpecType>(_ serviceSpec: ServiceSpec) -> ServiceSpec.Service? {
+    open func getService<Service: ServiceType>(_ serviceType: Service.Type) -> Service? {
         lock.lock()
         defer { lock.unlock() }
         
-        let serviceId = serviceSpec.serviceIdentifier
-        return services[serviceId] as? ServiceSpec.Service
+        let key = String(describing: serviceType.self)
+        guard let service = services[key] as? Service else {
+            return nil
+        }
+        return service
     }
 }
