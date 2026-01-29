@@ -8,6 +8,8 @@
 import Foundation
 
 public struct AccountServiceSpec: ServiceSpecType {
+    public init() {}
+    
     public var serviceIdentifier = String(describing: AccountService.self)
     
     public func makeService() -> AccountService {
