@@ -7,7 +7,12 @@
 
 import Foundation
 
-open class AccountService {
+open class AccountService: ServiceType {
+    
+    open func start() {
+        
+    }
+
     open func register(user: UserCreate) async throws -> UserAuthed {
         let user = try await API.register(user: user)
         try await UserTable.insertOrReplace(user: user.asUserModel)
@@ -35,6 +40,10 @@ open class AccountService {
         currentUser.account = userRead
         try Networking.store(user: currentUser)
         return userRead
+    }
+    
+    open func stop() {
+        
     }
 }
 

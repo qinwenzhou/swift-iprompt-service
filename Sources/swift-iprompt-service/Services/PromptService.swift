@@ -6,9 +6,16 @@
 //
 
 import Foundation
+import Combine
 @preconcurrency import WCDBSwift
 
-open class PromptService {
+open class PromptService: ServiceType {
+    public var promptListSubject = PassthroughSubject<[PromptRead], Never>()
+    
+    open func start() {
+        
+    }
+    
     open func create(prompt: PromptCreate) async throws -> PromptRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
@@ -63,6 +70,10 @@ open class PromptService {
             try await API.deletePrompt(with: promptId)
         }
         try await PromptTable.deletePrompt(with: promptId)
+    }
+    
+    open func stop() {
+        
     }
 }
 
