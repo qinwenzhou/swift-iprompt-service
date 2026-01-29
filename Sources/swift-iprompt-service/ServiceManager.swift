@@ -14,12 +14,6 @@ open class ServiceManager: @unchecked Sendable {
     private var services = [String: ServiceType]()
     private var lock = NSLock()
     
-    open func install<ServiceSpec: ServiceSpecType>(_ serviceSpecs: [ServiceSpec]) {
-        for spec in serviceSpecs {
-            self.install(spec)
-        }
-    }
-    
     open func install<ServiceSpec: ServiceSpecType>(_ serviceSpec: ServiceSpec) {
         lock.lock()
         defer { lock.unlock() }
@@ -31,12 +25,6 @@ open class ServiceManager: @unchecked Sendable {
         service.start()
         
         services[serviceId] = service
-    }
-    
-    open func uninstall<ServiceSpec: ServiceSpecType>(_ serviceSpecs: [ServiceSpec]) {
-        for spec in serviceSpecs {
-            self.uninstall(spec)
-        }
     }
     
     open func uninstall<ServiceSpec: ServiceSpecType>(_ serviceSpec: ServiceSpec) {
