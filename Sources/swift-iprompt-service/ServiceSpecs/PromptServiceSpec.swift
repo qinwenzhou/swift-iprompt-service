@@ -8,6 +8,8 @@
 import Foundation
 
 public struct PromptServiceSpec: ServiceSpecType {
+    public init() {}
+    
     public var serviceIdentifier = String(describing: PromptService.self)
     
     public func makeService() -> PromptService {

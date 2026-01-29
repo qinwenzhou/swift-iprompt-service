@@ -8,6 +8,8 @@
 import Foundation
 
 public struct TagServiceSpec: ServiceSpecType {
+    public init() {}
+    
     public var serviceIdentifier = String(describing: TagService.self)
     
     public func makeService() -> TagService {
