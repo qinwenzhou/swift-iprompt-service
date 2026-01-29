@@ -6,9 +6,16 @@
 //
 
 import Foundation
+import Combine
 @preconcurrency import WCDBSwift
 
-open class TagService {
+open class TagService: ServiceType {
+    public var tagListSubject = PassthroughSubject<[TagRead], Never>()
+    
+    open func start() {
+        
+    }
+    
     open func create(tag: TagCreate) async throws -> TagRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
@@ -74,6 +81,10 @@ open class TagService {
         for tagId in tagIds {
             try await TagTable.deleteTag(with: tagId)
         }
+    }
+    
+    open func stop() {
+        
     }
 }
 
