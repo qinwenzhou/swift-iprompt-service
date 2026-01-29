@@ -6,6 +6,8 @@
 //
 
 public protocol ServiceType: AnyObject {
+    init()
+    
     func start()
     func stop()
 }

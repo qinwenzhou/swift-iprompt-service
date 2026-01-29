@@ -8,6 +8,9 @@
 import Foundation
 
 open class AccountService: ServiceType {
+    public required init() {
+        
+    }
     
     open func start() {
         
