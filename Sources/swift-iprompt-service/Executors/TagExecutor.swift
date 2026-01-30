@@ -83,7 +83,6 @@ extension TagCreate {
             tagId: tagId,
             name: self.name,
             color: self.color,
-            priority: self.priority,
             createTime: Date.now,
             updateTime: Date.now
         )
@@ -97,7 +96,6 @@ extension TagRead {
             tagId: self.id,
             name: self.name,
             color: self.color,
-            priority: self.priority,
             createTime: self.createTime,
             updateTime: self.updateTime
         )
@@ -110,7 +108,6 @@ extension TagModel {
             id: self.tagId,
             name: self.name,
             color: self.color,
-            priority: self.priority,
             createTime: self.createTime,
             updateTime: self.updateTime
         )
