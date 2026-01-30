@@ -92,7 +92,7 @@ extension PromptCreate {
             promptId: promptId,
             name: self.name,
             content: self.content,
-            description: self.description,
+            remark: self.remark,
             type: self.type,
             tags: self.tags,
             attachs: self.attachs?.compactMap {
@@ -111,7 +111,7 @@ extension PromptRead {
             promptId: self.id,
             name: self.name,
             content: self.content,
-            description: self.description,
+            remark: self.remark,
             type: self.type,
             tags: self.tags,
             attachs: self.attachs?.compactMap {
@@ -129,6 +129,7 @@ extension PromptModel {
             id: self.promptId,
             name: self.name,
             content: self.content,
+            remark: self.remark,
             type: self.type,
             tags: self.tags,
             attachs: self.attachs?.compactMap {
