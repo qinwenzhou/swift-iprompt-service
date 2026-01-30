@@ -12,7 +12,7 @@ extension Database: DBAsyncCompatible {}
 
 extension DBAsyncWrapper where Base: Database {
     func getObjects<Object: TableDecodable & Sendable>(
-        on propertyConvertibleList: PropertyConvertible...,
+        on propertyConvertibleList: [PropertyConvertible] = Object.Properties.all,
         fromTable table: String,
         where condition: Condition? = nil,
         orderBy orderList: [OrderBy]? = nil,
@@ -43,7 +43,7 @@ extension DBAsyncWrapper where Base: Database {
     }
     
     func getObject<Object: TableDecodable & Sendable>(
-        on propertyConvertibleList: PropertyConvertible...,
+        on propertyConvertibleList: [PropertyConvertible] = Object.Properties.all,
         fromTable table: String,
         where condition: Condition? = nil,
         orderBy orderList: [OrderBy]? = nil,
@@ -54,7 +54,7 @@ extension DBAsyncWrapper where Base: Database {
                 try self.base.run(transaction: { db in
                     do {
                         let object: Object? = try db.getObject(
-                            on: propertyConvertibleList,
+                            on: propertyConvertibleList.isEmpty ? Object.Properties.all : propertyConvertibleList,
                             fromTable: table,
                             where: condition,
                             orderBy: orderList,
