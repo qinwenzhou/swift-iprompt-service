@@ -11,8 +11,8 @@ open class ServiceManager: @unchecked Sendable {
     public static let shared = ServiceManager()
     private init() {}
     
-    private var services = [String: ServiceType]()
     private var lock = NSLock()
+    private var services = [String: ServiceType]()
     
     @discardableResult
     open func install<Service: ServiceType>(_ serviceType: Service.Type) -> Service {
