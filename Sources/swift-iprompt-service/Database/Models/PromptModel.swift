@@ -18,7 +18,7 @@ internal struct PromptModel: TableCodable, Sendable {
     var promptId: Int64
     var name: String
     var content: String
-    var description: String?
+    var remark: String?
     var type: Int
     var tags: [Int64]?
     var attachs: [DBAttach]?
@@ -38,7 +38,7 @@ internal struct PromptModel: TableCodable, Sendable {
         case promptId = "prompt_id"
         case name
         case content
-        case description
+        case remark
         case type
         case tags
         case attachs
