@@ -6,152 +6,73 @@
 //
 
 import Foundation
-import Combine
+@preconcurrency import Combine
 @preconcurrency import WCDBSwift
 
-open class PromptService: ServiceType {
-    public var promptListSubject = CurrentValueSubject<[PromptRead], Never>([])
+public final class PromptService: ServiceType, Sendable {
+    private let executor = PromptExecutor()
+    
+    public let listSubject = CurrentValueSubject<[PromptRead], Never>([])
     
     public required init() {
         
     }
     
-    open func start() {
-        
-    }
-    
-    open func create(prompt: PromptCreate) async throws -> PromptRead {
-        let user = try? Networking.getCurrentUser()
-        let userId = user?.account.id ?? 0
-        guard userId > 0 else {
-            let lastId = try await PromptTable.getLastLocalPromptId()
-            let promptId = (lastId + 1) * (-1) // Use negative numbers to indicate local id.
-            let promptModel = prompt.asLocalPromptModel(with: promptId)
-            try await PromptTable.insertOrReplace(prompt: promptModel)
-            return promptModel.asPromptRead
-        }
-        let promptRead = try await API.create(prompt: prompt)
-        let promptModel = promptRead.asPromptModel(for: userId)
-        try await PromptTable.insertOrReplace(prompt: promptModel)
-        return promptRead
-    }
-    
-    open func readCachedPromptList() async throws -> [PromptRead] {
-        let user = try? Networking.getCurrentUser()
-        let userId = user?.account.id ?? 0
-        return try await PromptTable.getAllPrompts(for: userId).map {
-            $0.asPromptRead
+    public func start() {
+        Task {
+            do {
+                self.listSubject.send(
+                    try await self.executor.readCachedPromptList()
+                )
+                self.listSubject.send(
+                    try await self.executor.readRemotePromptList()
+                )
+            } catch {
+                
+            }
         }
     }
     
-    open func readPromptList() async throws -> [PromptRead] {
-        let user = try Networking.getCurrentUser()
-        let promptList = try await API.readPromptList()
-        try await PromptTable.insertOrReplace(prompts: promptList.map {
-            $0.asPromptModel(for: user.account.id)
-        })
-        return promptList
-    }
-    
-    open func readPromptInfo(with promptId: Int64) async throws -> PromptRead {
-        let user = try? Networking.getCurrentUser()
-        let userId = user?.account.id ?? 0
-        guard userId > 0 else {
-            let promptModel = try await PromptTable.getPrompt(with: promptId)
-            return promptModel.asPromptRead
-        }
-        let promptRead = try await API.readPromptInfo(with: promptId)
-        try await PromptTable.insertOrReplace(
-            prompt: promptRead.asPromptModel(for: userId)
-        )
-        return promptRead
-    }
-    
-    open func deletePrompt(with promptId: Int64) async throws {
-        let user = try? Networking.getCurrentUser()
-        let userId = user?.account.id ?? 0
-        if userId > 0 {
-            try await API.deletePrompt(with: promptId)
-        }
-        try await PromptTable.deletePrompt(with: promptId)
-    }
-    
-    open func stop() {
+    public func stop() {
         
     }
 }
 
-extension Attach {
-    var asDBAttach: DBAttach {
-        DBAttach(
-            name: self.name,
-            url: self.url,
-            type: self.type
-        )
+extension PromptService {
+    @discardableResult
+    public func create(prompt: PromptCreate) async throws -> PromptRead {
+        let newPrompt = try await self.executor.create(prompt: prompt)
+        
+        var list = self.listSubject.value.filter {
+            $0.id != newPrompt.id
+        }
+        list.append(newPrompt)
+        
+        self.listSubject.send(list)
+        
+        return newPrompt
+    }
+    
+    public func readPromptInfo(with promptId: Int64) async throws -> PromptRead {
+        let prompt = try await self.executor.readPromptInfo(with: promptId)
+        
+        var list = self.listSubject.value.filter {
+            $0.id != prompt.id
+        }
+        list.append(prompt)
+        
+        self.listSubject.send(list)
+        
+        return prompt
+    }
+    
+    public func deletePrompt(with promptId: Int64) async throws {
+        try await self.executor.deletePrompt(with: promptId)
+        
+        let list = self.listSubject.value.filter {
+            $0.id != promptId
+        }
+        self.listSubject.send(list)
     }
 }
 
-extension DBAttach {
-    var asAttach: Attach {
-        Attach(
-            name: self.name,
-            url: self.url,
-            type: self.type
-        )
-    }
-}
-
-extension PromptCreate {
-    func asLocalPromptModel(with promptId: Int64) -> PromptModel {
-        PromptModel(
-            userId: 0,
-            promptId: promptId,
-            name: self.name,
-            content: self.content,
-            description: self.description,
-            type: self.type,
-            tags: self.tags,
-            attachs: self.attachs?.compactMap {
-                $0.asDBAttach
-            },
-            createTime: Date.now,
-            updateTime: Date.now
-        )
-    }
-}
-
-extension PromptRead {
-    func asPromptModel(for userId: Int64) -> PromptModel {
-        PromptModel(
-            userId: userId,
-            promptId: self.id,
-            name: self.name,
-            content: self.content,
-            description: self.description,
-            type: self.type,
-            tags: self.tags,
-            attachs: self.attachs?.compactMap {
-                $0.asDBAttach
-            },
-            createTime: self.createTime,
-            updateTime: self.updateTime
-        )
-    }
-}
-
-extension PromptModel {
-    var asPromptRead: PromptRead {
-        PromptRead(
-            id: self.promptId,
-            name: self.name,
-            content: self.content,
-            type: self.type,
-            tags: self.tags,
-            attachs: self.attachs?.compactMap {
-                $0.asAttach
-            },
-            createTime: self.createTime,
-            updateTime: self.updateTime
-        )
-    }
-}
