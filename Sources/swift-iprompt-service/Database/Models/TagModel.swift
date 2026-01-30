@@ -18,7 +18,6 @@ internal struct TagModel: TableCodable, Sendable {
     var tagId: Int64
     var name: String
     var color: String
-    var priority: Int
     var createTime: Date
     var updateTime: Date
     
@@ -35,7 +34,6 @@ internal struct TagModel: TableCodable, Sendable {
         case tagId = "tag_id"
         case name
         case color
-        case priority
         case createTime = "create_time"
         case updateTime = "update_time"
     }
