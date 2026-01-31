@@ -8,16 +8,16 @@
 import Foundation
 
 public struct PromptExecutor: Sendable {
-    public func create(prompt: PromptCreate) async throws -> PromptRead {
+    public func create(prompt promptCreate: PromptCreate) async throws -> PromptRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
         let promptRead: PromptRead = try await {
             if userId > 0 {
-                return try await API.create(prompt: prompt)
+                return try await API.create(pompt: promptCreate)
             } else {
                 let lastId = try await PromptTable.getLastLocalPromptId()
                 let promptId = (lastId + 1) * -1
-                return prompt.asPromptRead(with: promptId)
+                return promptCreate.asPromptRead(with: promptId)
             }
         }()
         let promptModel = promptRead.asPromptModel(for: userId)
@@ -25,16 +25,16 @@ public struct PromptExecutor: Sendable {
         return promptRead
     }
     
-    public func update(prompt: PromptRead) async throws -> PromptRead {
+    public func update(prompt promptUpdate: PromptUpdate) async throws -> PromptRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
         if userId > 0 {
-            let updatedPrompt = try await API.update(prompt: prompt)
-            let promptModel = updatedPrompt.asPromptModel(for: userId)
+            let promptRead = try await API.update(prompt: promptUpdate)
+            let promptModel = promptRead.asPromptModel(for: userId)
             try await PromptTable.insertOrReplace(prompt: promptModel)
-            return updatedPrompt
+            return promptRead
         } else {
-            var promptModel = prompt.asPromptModel(for: userId)
+            var promptModel = promptUpdate.asPromptModel(for: userId)
             promptModel.updateTime = Date.now
             try await PromptTable.insertOrReplace(prompt: promptModel)
             return promptModel.asPromptRead
@@ -114,6 +114,25 @@ extension PromptCreate {
             attachs: self.attachs,
             createTime: Date.now,
             updateTime: Date.now
+        )
+    }
+}
+
+extension PromptUpdate {
+    func asPromptModel(for userId: Int64) -> PromptModel {
+        PromptModel(
+            userId: userId,
+            promptId: self.id,
+            name: self.name,
+            content: self.content,
+            remark: self.remark,
+            type: self.type,
+            tags: self.tags,
+            attachs: self.attachs?.compactMap {
+                $0.asDBAttach
+            },
+            createTime: self.createTime,
+            updateTime: self.updateTime
         )
     }
 }

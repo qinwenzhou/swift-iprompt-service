@@ -8,16 +8,16 @@
 import Foundation
 
 public struct TagExecutor: Sendable {
-    public func create(tag: TagCreate) async throws -> TagRead {
+    public func create(tag tagCreate: TagCreate) async throws -> TagRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
         let tagRead: TagRead = try await {
             if userId > 0 {
-                return try await API.create(tag: tag)
+                return try await API.create(tag: tagCreate)
             } else {
                 let lastId = try await TagTable.getLastLocalTagId()
                 let tagId = (lastId + 1) * (-1) // Use negative numbers to indicate local id.
-                return tag.asTagRead(with: tagId)
+                return tagCreate.asTagRead(with: tagId)
             }
         }()
         let tagModel = tagRead.asTagModel(for: userId)

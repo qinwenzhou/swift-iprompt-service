@@ -10,12 +10,12 @@ import Alamofire
 
 extension API {
     public static func create(
-        prompt: PromptCreate
+        pompt pomptCreate: PromptCreate
     ) async throws -> PromptRead {
         let response = await AS.request(
             Self.promptCreate.url(v: 1),
             method: .post,
-            parameters: prompt,
+            parameters: pomptCreate,
             encoder: JSONParameterEncoder.snakeCase
         ).serializingDecodable(
             PromptRead.self,
@@ -31,12 +31,12 @@ extension API {
     }
     
     public static func update(
-        prompt: PromptRead
+        prompt promptUpdate: PromptUpdate
     ) async throws -> PromptRead {
         let response = await AS.request(
             Self.promptUpdate.url(v: 1),
             method: .post,
-            parameters: prompt,
+            parameters: promptUpdate,
             encoder: JSONParameterEncoder.snakeCase
         ).serializingDecodable(
             PromptRead.self,

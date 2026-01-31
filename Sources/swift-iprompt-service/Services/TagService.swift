@@ -40,17 +40,17 @@ public final class TagService: ServiceType, Sendable {
 
 extension TagService {
     @discardableResult
-    public func create(tag: TagCreate) async throws -> TagRead {
-        let newTag = try await self.executor.create(tag: tag)
+    public func create(tag tagCreate: TagCreate) async throws -> TagRead {
+        let tagRead = try await self.executor.create(tag: tagCreate)
         
         var list = self.listSubject.value.filter {
-            $0.id != newTag.id
+            $0.id != tagRead.id
         }
-        list.append(newTag)
+        list.append(tagRead)
         
         self.listSubject.send(list)
         
-        return newTag
+        return tagRead
     }
     
     public func readTagInfo(with tagId: Int64) async throws -> TagRead {

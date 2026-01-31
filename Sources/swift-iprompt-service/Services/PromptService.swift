@@ -40,31 +40,31 @@ public final class PromptService: ServiceType, Sendable {
 
 extension PromptService {
     @discardableResult
-    public func create(prompt: PromptCreate) async throws -> PromptRead {
-        let newPrompt = try await self.executor.create(prompt: prompt)
+    public func create(prompt promptCreate: PromptCreate) async throws -> PromptRead {
+        let promptRead = try await self.executor.create(prompt: promptCreate)
         
         var list = self.listSubject.value.filter {
-            $0.id != newPrompt.id
+            $0.id != promptRead.id
         }
-        list.append(newPrompt)
+        list.append(promptRead)
         
         self.listSubject.send(list)
         
-        return newPrompt
+        return promptRead
     }
     
     @discardableResult
-    public func update(prompt: PromptRead) async throws -> PromptRead {
-        let newPrompt = try await self.executor.update(prompt: prompt)
+    public func update(prompt promptUpdate: PromptUpdate) async throws -> PromptRead {
+        let promptRead = try await self.executor.update(prompt: promptUpdate)
         
         var list = self.listSubject.value.filter {
-            $0.id != newPrompt.id
+            $0.id != promptRead.id
         }
-        list.append(newPrompt)
+        list.append(promptRead)
         
         self.listSubject.send(list)
         
-        return newPrompt
+        return promptRead
     }
     
     public func readPromptInfo(with promptId: Int64) async throws -> PromptRead {
