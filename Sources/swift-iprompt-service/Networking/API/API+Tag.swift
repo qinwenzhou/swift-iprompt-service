@@ -10,12 +10,12 @@ import Alamofire
 
 extension API {
     public static func create(
-        tag: TagCreate
+        tag tagCreate: TagCreate
     ) async throws -> TagRead {
         let response = await AS.request(
             Self.tagCreate.url(v: 1),
             method: .post,
-            parameters: tag,
+            parameters: tagCreate,
             encoder: JSONParameterEncoder.snakeCase
         ).serializingDecodable(
             TagRead.self,
@@ -30,9 +30,7 @@ extension API {
         }
     }
     
-    public static func readTagList(
-        
-    ) async throws -> [TagRead] {
+    public static func readTagList() async throws -> [TagRead] {
         let response = await AS.request(
             Self.tagList.url(v: 1),
             method: .get,
