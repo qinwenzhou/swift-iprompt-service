@@ -32,19 +32,20 @@ extension API {
     
     public static func update(
         prompt: PromptRead
-    ) async throws {
+    ) async throws -> PromptRead {
         let response = await AS.request(
             Self.promptUpdate.url(v: 1),
             method: .post,
             parameters: prompt,
             encoder: JSONParameterEncoder.snakeCase
         ).serializingDecodable(
-            Empty.self
+            PromptRead.self,
+            decoder: JSONDecoder.snakeCase
         ).response
         
         switch response.result {
-        case .success:
-            break
+        case .success(let promptRead):
+            return promptRead
         case .failure(let error):
             throw error
         }
