@@ -53,6 +53,17 @@ extension PromptService {
         return newPrompt
     }
     
+    public func update(prompt: PromptRead) async throws {
+        try await self.executor.update(prompt: prompt)
+        
+        var list = self.listSubject.value.filter {
+            $0.id != prompt.id
+        }
+        list.append(prompt)
+        
+        self.listSubject.send(list)
+    }
+    
     public func readPromptInfo(with promptId: Int64) async throws -> PromptRead {
         let prompt = try await self.executor.readPromptInfo(with: promptId)
         

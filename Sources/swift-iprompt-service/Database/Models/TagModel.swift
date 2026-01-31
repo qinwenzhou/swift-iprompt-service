@@ -72,7 +72,7 @@ extension TagModel {
             fromTable: Self.tableName,
             where: Self.Properties.tagId == tagId
         ) else {
-            throw DBError(message: "Record is not found!")
+            throw SrvError(message: "Record is not found!")
         }
         return record
     }

@@ -11,17 +11,28 @@ public struct PromptExecutor: Sendable {
     public func create(prompt: PromptCreate) async throws -> PromptRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
-        guard userId > 0 else {
-            let lastId = try await PromptTable.getLastLocalPromptId()
-            let promptId = (lastId + 1) * (-1) // Use negative numbers to indicate local id.
-            let promptModel = prompt.asLocalPromptModel(with: promptId)
-            try await PromptTable.insertOrReplace(prompt: promptModel)
-            return promptModel.asPromptRead
-        }
-        let promptRead = try await API.create(prompt: prompt)
+        let promptRead: PromptRead = try await {
+            if userId > 0 {
+                return try await API.create(prompt: prompt)
+            } else {
+                let lastId = try await PromptTable.getLastLocalPromptId()
+                let promptId = (lastId + 1) * -1
+                return prompt.asPromptRead(with: promptId)
+            }
+        }()
         let promptModel = promptRead.asPromptModel(for: userId)
         try await PromptTable.insertOrReplace(prompt: promptModel)
         return promptRead
+    }
+    
+    public func update(prompt: PromptRead) async throws {
+        let user = try? Networking.getCurrentUser()
+        let userId = user?.account.id ?? 0
+        if userId > 0 {
+            try await API.update(prompt: prompt)
+        }
+        let promptModel = prompt.asPromptModel(for: userId)
+        try await PromptTable.insertOrReplace(prompt: promptModel)
     }
     
     public func readCachedPromptList() async throws -> [PromptRead] {
@@ -44,15 +55,15 @@ public struct PromptExecutor: Sendable {
     public func readPromptInfo(with promptId: Int64) async throws -> PromptRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
-        guard userId > 0 else {
+        if userId > 0 {
+            let promptRead = try await API.readPromptInfo(with: promptId)
+            let promptModel = promptRead.asPromptModel(for: userId)
+            try await PromptTable.insertOrReplace(prompt: promptModel)
+            return promptRead
+        } else {
             let promptModel = try await PromptTable.getPrompt(with: promptId)
             return promptModel.asPromptRead
         }
-        let promptRead = try await API.readPromptInfo(with: promptId)
-        try await PromptTable.insertOrReplace(
-            prompt: promptRead.asPromptModel(for: userId)
-        )
-        return promptRead
     }
     
     public func deletePrompt(with promptId: Int64) async throws {
@@ -86,18 +97,15 @@ extension DBAttach {
 }
 
 extension PromptCreate {
-    func asLocalPromptModel(with promptId: Int64) -> PromptModel {
-        PromptModel(
-            userId: 0,
-            promptId: promptId,
+    func asPromptRead(with promptId: Int64) -> PromptRead {
+        PromptRead(
+            id: promptId,
             name: self.name,
             content: self.content,
             remark: self.remark,
             type: self.type,
             tags: self.tags,
-            attachs: self.attachs?.compactMap {
-                $0.asDBAttach
-            },
+            attachs: self.attachs,
             createTime: Date.now,
             updateTime: Date.now
         )

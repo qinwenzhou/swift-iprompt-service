@@ -30,9 +30,27 @@ extension API {
         }
     }
     
-    public static func readPromptList(
+    public static func update(
+        prompt: PromptRead
+    ) async throws {
+        let response = await AS.request(
+            Self.promptUpdate.url(v: 1),
+            method: .post,
+            parameters: prompt,
+            encoder: JSONParameterEncoder.snakeCase
+        ).serializingDecodable(
+            Empty.self
+        ).response
         
-    ) async throws -> [PromptRead] {
+        switch response.result {
+        case .success:
+            break
+        case .failure(let error):
+            throw error
+        }
+    }
+    
+    public static func readPromptList() async throws -> [PromptRead] {
         let response = await AS.request(
             Self.promptList.url(v: 1),
             method: .get,
