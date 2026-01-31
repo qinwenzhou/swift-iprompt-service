@@ -11,14 +11,15 @@ public struct TagExecutor: Sendable {
     public func create(tag: TagCreate) async throws -> TagRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
-        guard userId > 0 else {
-            let lastId = try await TagTable.getLastLocalTagId()
-            let tagId = (lastId + 1) * (-1) // Use negative numbers to indicate local id.
-            let tagModel = tag.asLocalTagModel(with: tagId)
-            try await TagTable.insertOrReplace(tag: tagModel)
-            return tagModel.asTagRead
-        }
-        let tagRead = try await API.create(tag: tag)
+        let tagRead: TagRead = try await {
+            if userId > 0 {
+                return try await API.create(tag: tag)
+            } else {
+                let lastId = try await TagTable.getLastLocalTagId()
+                let tagId = (lastId + 1) * (-1) // Use negative numbers to indicate local id.
+                return tag.asTagRead(with: tagId)
+            }
+        }()
         let tagModel = tagRead.asTagModel(for: userId)
         try await TagTable.insertOrReplace(tag: tagModel)
         return tagRead
@@ -44,15 +45,15 @@ public struct TagExecutor: Sendable {
     public func readTagInfo(with tagId: Int64) async throws -> TagRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
-        guard userId > 0 else {
+        if userId > 0 {
+            let tagRead = try await API.readTagInfo(with: tagId)
+            let tagModel = tagRead.asTagModel(for: userId)
+            try await TagTable.insertOrReplace(tag: tagModel)
+            return tagRead
+        } else {
             let tagModel = try await TagTable.getTag(with: tagId)
             return tagModel.asTagRead
         }
-        let tagRead = try await API.readTagInfo(with: tagId)
-        try await TagTable.insertOrReplace(
-            tag: tagRead.asTagModel(for: userId)
-        )
-        return tagRead
     }
     
     public func deleteTag(with tagId: Int64) async throws {
@@ -77,10 +78,9 @@ public struct TagExecutor: Sendable {
 }
 
 extension TagCreate {
-    func asLocalTagModel(with tagId: Int64) -> TagModel {
-        TagModel(
-            userId: 0,
-            tagId: tagId,
+    func asTagRead(with tagId: Int64) -> TagRead {
+        TagRead(
+            id: tagId,
             name: self.name,
             color: self.color,
             createTime: Date.now,

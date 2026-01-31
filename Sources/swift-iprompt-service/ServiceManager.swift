@@ -55,13 +55,13 @@ open class ServiceManager: @unchecked Sendable {
         services.removeAll()
     }
     
-    open func getService<Service: ServiceType>(_ serviceType: Service.Type) -> Service? {
+    open func getService<Service: ServiceType>(_ serviceType: Service.Type) throws -> Service {
         lock.lock()
         defer { lock.unlock() }
         
         let key = String(describing: serviceType.self)
         guard let service = services[key] as? Service else {
-            return nil
+            throw SrvError(message: "Service is not found.")
         }
         return service
     }

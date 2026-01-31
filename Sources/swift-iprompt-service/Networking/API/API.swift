@@ -16,6 +16,7 @@ public enum API: String {
     
     case promptList = "/prompt/list"
     case promptCreate = "/prompt/create"
+    case promptUpdate = "/prompt/update"
     case promptInfo = "/prompt/info"
     case promptDelete = "/prompt/delete"
     

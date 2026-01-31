@@ -61,7 +61,7 @@ extension UserModel {
             fromTable: Self.tableName,
             where: Self.Properties.userId == id
         ) else {
-            throw DBError(message: "Record is not found!")
+            throw SrvError(message: "Record is not found!")
         }
         return record
     }

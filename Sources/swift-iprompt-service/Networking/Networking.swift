@@ -52,7 +52,7 @@ public final class Networking: @unchecked Sendable {
     /// Authed user
     public static func getCurrentUser() throws -> UserAuthed {
         guard let user = Networking.shared.user else {
-            throw NetworkingError(message: "Not yet logged in.")
+            throw SrvError(message: "Not yet logged in.")
         }
         return user
     }
@@ -65,7 +65,7 @@ public final class Networking: @unchecked Sendable {
         
         let data = try JSONEncoder().encode(user)
         guard let content = String(data: data, encoding: .utf8) else {
-            throw NetworkingError(message: nil)
+            throw SrvError(message: nil)
         }
         let enc = try Crypto().encrypt(content)
         let keychain = Keychain(service: KEYCHAIN_SERVICE)
@@ -75,11 +75,11 @@ public final class Networking: @unchecked Sendable {
     internal static func readStoredUser() throws -> UserAuthed {
         let keychain = Keychain(service: KEYCHAIN_SERVICE)
         guard let enc = try keychain.get(KC_AUTHED_USER_KEY) else {
-            throw NetworkingError(message: "No cached user.")
+            throw SrvError(message: "No cached user.")
         }
         let dec = try Crypto().decrypt(enc)
         guard let data = dec.data(using: .utf8) else {
-            throw NetworkingError(message: nil)
+            throw SrvError(message: nil)
         }
         return try JSONDecoder().decode(UserAuthed.self, from: data)
     }
