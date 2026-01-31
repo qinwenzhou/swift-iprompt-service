@@ -25,14 +25,20 @@ public struct PromptExecutor: Sendable {
         return promptRead
     }
     
-    public func update(prompt: PromptRead) async throws {
+    public func update(prompt: PromptRead) async throws -> PromptRead {
         let user = try? Networking.getCurrentUser()
         let userId = user?.account.id ?? 0
         if userId > 0 {
-            try await API.update(prompt: prompt)
+            let updatedPrompt = try await API.update(prompt: prompt)
+            let promptModel = updatedPrompt.asPromptModel(for: userId)
+            try await PromptTable.insertOrReplace(prompt: promptModel)
+            return updatedPrompt
+        } else {
+            var promptModel = prompt.asPromptModel(for: userId)
+            promptModel.updateTime = Date.now
+            try await PromptTable.insertOrReplace(prompt: promptModel)
+            return promptModel.asPromptRead
         }
-        let promptModel = prompt.asPromptModel(for: userId)
-        try await PromptTable.insertOrReplace(prompt: promptModel)
     }
     
     public func readCachedPromptList() async throws -> [PromptRead] {
